@@ -1,0 +1,59 @@
+---
+title: "Vitamin C effect on Tooth Growth in Guinea Pigs"
+author: "Mathieu Wauters"
+date: "12 februari 2016"
+output: pdf_document
+---
+\section{Introduction}
+In this document, we report on the influence of the effect of Vitamin C on Tooth Growth in Guinea Pigs. All analyses are done on the ToothGrowth data which is found in the datasets package. The structure of this document is as follows: first of all, we will do some exploratory analysis, after which a summary of the data is provided. Next, we will employ hypothesis tests to examine tooth growth based on the Vitamin C dosage and the delivery method (orange juice or ascorbic acid). For ease of reference, we will refer to these factors as \textit{dose} and \textit{supp} respectively.
+\section{Exploratory Analysis \& Summary}
+First of all, let us load the data and take a look at the description of the data. The vignette of ToothGrowth tells us the data is a dataframe with 60 observations and 3 variables. 
+```{r,message=FALSE, warning=FALSE}
+library(datasets)
+#?ToothGrowth
+```
+However, let's see whether these observations are spread evenly among the factors. There are 10 observations for every combination of \textit{supp} and \textit{dose}.
+```{r,message=FALSE, warning=FALSE}
+ToothGrowth$dose_f<-as.factor(ToothGrowth$dose)
+table(ToothGrowth$supp,ToothGrowth$dose_f)
+```
+Whenever possible, it makes sense to produce a plot to visually inspect the relation(s) we want to establish. In this case, we plot the dose against the tooth growth for both supplements. The graph below reveals there is quite a difference in tooth length for the different dosage levels. The challenge is now to check whether this relation is also \textit{statistically} significant.
+```{r,echo=FALSE,message=FALSE, warning=FALSE,fig.width=5,fig.align='center'}
+library(ggplot2)
+ggplot(ToothGrowth,aes(x=as.factor(dose),y=len))+geom_boxplot()+facet_grid(. ~ supp)+theme_bw()+xlab("Dose")+ylab("Tooth Length")
+```
+Finally, we summarize the data as follows:
+```{r,echo=TRUE,message=FALSE, warning=FALSE}
+summary(ToothGrowth)
+```
+\section{Hypothesis tests}
+In this section we conduct hypothesis tests to check two things: 
+\begin{itemize}
+\item Does the supplement impact tooth growth in a different manner?
+\item Does the dosage level impact tooth growth in a different manner?
+\end{itemize}
+These tests will be conducted conservatively, i.e. we will assume unequal variances. The null hypothesis, $H_0$, states that there is no significant difference in the mean tooth growth for a different supplement type or dosage level. Hence, if we can reject the null hypothesis, there is evidence that there is indeed an impact of the supplement type or dosage level.
+\subsection{Effect of supplement type}
+```{r,echo=TRUE,message=FALSE, warning=FALSE}
+attach(ToothGrowth)
+t.test(len ~ supp,data=subset(ToothGrowth,dose==.5),var.equal=F)$p.value
+t.test(len ~ supp,data=subset(ToothGrowth,dose==1),var.equal=F)$p.value
+t.test(len ~ supp,data=subset(ToothGrowth,dose==2),var.equal=F)$p.value
+```
+We can reject $H_0$ for doses of 0.5 and 1. For 2mg however, there is no significant difference between supplements. It is worth remarking that this may also be due to the low sample size ($n=10$) for every group. Collecting more data may inspire more trust in the found relations.
+\subsection{Effect of dosage level}
+```{r}
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="VC" & dose<2),var.equal=F)$p.value
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="OJ" & dose<2),var.equal=F)$p.value
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="VC" & dose>.5),var.equal=F)$p.value
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="OJ" & dose>.5),var.equal=F)$p.value
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="VC" & dose!=1),var.equal=F)$p.value
+t.test(len ~ dose,data=subset(ToothGrowth,supp=="OJ" & dose!=1),var.equal=F)$p.value
+```
+All conducted t-tests have a pvalue lower than 0.05, which means we can reject $H_0$. For the same supplement, there is a significant influence of the dosage level on tooth growth.
+\section{Conclusions}
+The conclusions are given below:
+\begin{itemize}
+  \item \textbf{Supplement type}: we found that there is a significant influence of the supplement type on tooth growth for dosage levels of 0.5 and 1mg. Based on the plot included in this report, preference should be given to orange juice for these dosage levels. We failed to reject the null hypothesis at a dosage level of 2mg, implying that the delivery method at this level has no effect on tooth length. 
+  \item \textbf{Dosage level}: for the same delivery method, there is a significant difference between all dosage levels. Increasing the dosage leads, on average and ceteris paribus, to a heightened tooth length.
+\end{itemize}
